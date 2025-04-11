@@ -2,12 +2,14 @@ package id.ac.ui.cs.advprog.authprofile.model;
 
 import java.util.UUID;
 
+import id.ac.ui.cs.advprog.authprofile.model.enums.UserType;
+
 public class User {
 
     private UUID userId;
     private String username;
     private String password;
-    private String role;
+    private UserType role;
     private String description;
     private String phoneNumber;
     private String fullName;
@@ -36,11 +38,11 @@ public class User {
         this.password = password;
     }
 
-    public String getRole() {
+    public UserType getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(UserType role) {
         this.role = role;
     }
 

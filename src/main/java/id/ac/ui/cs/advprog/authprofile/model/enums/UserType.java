@@ -1,38 +1,39 @@
 package id.ac.ui.cs.advprog.authprofile.model.enums;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public enum UserType {
-    FUNDRAISER("FUNDRAISER"),
-    DONOR("DONOR"),
-    FUNDDONOR("FUNDDONOR"),
-    ADMIN("ADMIN");
+    FUNDRAISER("Fundraiser"),
+    DONOR("Donor"),
+    FUNDDONOR("Fundraiser & Donor"),
+    ADMIN("Admin");
 
-    private final String value;
+    private final String label;
 
-    UserType(String value) {
-        this.value = value;
+    UserType(String label) {
+        this.label = label;
     }
 
-    public String getValue() {
-        return value;
+    public String getLabel() {
+        return label;
     }
 
-    public static boolean contains(String param) {
-        for (UserType userType : UserType.values()) {
-            if (userType.name().equalsIgnoreCase(param)) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean contains(String input) {
+        return Arrays.stream(UserType.values())
+                     .anyMatch(type -> type.name().equalsIgnoreCase(input));
     }
 
-    public static List<String> getAll() {
-        List<String> types = new ArrayList<>();
-        for (UserType userType : UserType.values()) {
-            types.add(userType.name());
-        }
-        return types;
+    public static List<String> getAllNames() {
+        return Arrays.stream(UserType.values())
+                     .map(Enum::name)
+                     .collect(Collectors.toList());
+    }
+
+    public static List<String> getAllLabels() {
+        return Arrays.stream(UserType.values())
+                     .map(UserType::getLabel)
+                     .collect(Collectors.toList());
     }
 }
