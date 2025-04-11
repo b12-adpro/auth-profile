@@ -2,12 +2,12 @@ package id.ac.ui.cs.advprog.authprofile.service;
 
 import id.ac.ui.cs.advprog.authprofile.model.User;
 import id.ac.ui.cs.advprog.authprofile.repository.UserRepository;
+import id.ac.ui.cs.advprog.authprofile.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -17,53 +17,88 @@ public class UserServiceTest {
     private UserRepository userRepository;
     private UserService userService;
 
+    private User sampleUser;
+
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        userService = new UserService(userRepository);
+        userService = new UserServiceImpl(userRepository);
+
+        sampleUser = new User();
+        sampleUser.setUserId(UUID.randomUUID());
+        sampleUser.setEmail("test@example.com");
+        sampleUser.setPassword("secret");
+        sampleUser.setFullName("Test User");
+        sampleUser.setPhoneNumber("123456789");
+        sampleUser.setBio("Sample bio");
     }
 
     @Test
     void testCreateUser() {
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setFullName("John Doe");
+        when(userRepository.save(sampleUser)).thenReturn(sampleUser);
 
-        when(userRepository.save(user)).thenReturn(user);
+        User createdUser = userService.create(sampleUser);
 
-        User created = userService.createUser(user);
-
-        assertThat(created.getEmail()).isEqualTo("test@example.com");
-        assertThat(created.getFullName()).isEqualTo("John Doe");
-        verify(userRepository, times(1)).save(user);
+        assertThat(createdUser).isEqualTo(sampleUser);
+        verify(userRepository, times(1)).save(sampleUser);
     }
 
     @Test
-    void testFindUserByEmail() {
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setFullName("Jane Doe");
+    void testFindAllUsers() {
+        List<User> users = List.of(sampleUser);
+        when(userRepository.findAll()).thenReturn(users);
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        List<User> result = userService.findAll();
 
-        Optional<User> found = userService.findByEmail("test@example.com");
-
-        assertThat(found).isPresent();
-        assertThat(found.get().getFullName()).isEqualTo("Jane Doe");
+        assertThat(result).hasSize(1).contains(sampleUser);
     }
 
     @Test
-    void testFindUserById() {
-        UUID id = UUID.randomUUID();
-        User user = new User();
-        user.setUserId(id);
-        user.setEmail("findme@example.com");
+    void testFindByEmail() {
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(sampleUser));
 
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        Optional<User> result = userService.findByEmail("test@example.com");
 
-        Optional<User> result = userService.findById(id);
+        assertThat(result).isPresent().contains(sampleUser);
+    }
 
-        assertThat(result).isPresent();
-        assertThat(result.get().getEmail()).isEqualTo("findme@example.com");
+    @Test
+    void testFindById() {
+        UUID userId = sampleUser.getUserId();
+        when(userRepository.findById(userId)).thenReturn(Optional.of(sampleUser));
+
+        Optional<User> result = userService.findById(userId);
+
+        assertThat(result).isPresent().contains(sampleUser);
+    }
+
+    @Test
+    void testUpdateUser_Success() {
+        UUID userId = sampleUser.getUserId();
+        when(userRepository.existsById(userId)).thenReturn(true);
+        when(userRepository.save(any(User.class))).thenReturn(sampleUser);
+
+        boolean updated = userService.update(userId, sampleUser);
+
+        assertThat(updated).isTrue();
+    }
+
+    @Test
+    void testUpdateUser_Failure() {
+        UUID userId = sampleUser.getUserId();
+        when(userRepository.existsById(userId)).thenReturn(false);
+
+        boolean updated = userService.update(userId, sampleUser);
+
+        assertThat(updated).isFalse();
+    }
+
+    @Test
+    void testDeleteUser() {
+        UUID userId = sampleUser.getUserId();
+
+        userService.deleteUserById(userId);
+
+        verify(userRepository, times(1)).deleteById(userId);
     }
 }
