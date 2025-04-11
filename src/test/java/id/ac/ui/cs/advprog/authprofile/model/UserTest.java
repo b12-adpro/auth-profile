@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import id.ac.ui.cs.advprog.authprofile.model.enums.UserType;
+
 public class UserTest {
 
     @Test
@@ -18,7 +20,7 @@ public class UserTest {
         user.setUserId(userId);
         user.setUsername("test@example.com");
         user.setPassword("password123");
-        user.setRole("Admin");
+        user.setRole(UserType.ADMIN);
         user.setDescription("Description test");
         user.setPhoneNumber("12341234");
         user.setFullName("John Doe");
@@ -27,7 +29,7 @@ public class UserTest {
         assertThat(user.getUserId()).isEqualTo(userId);
         assertThat(user.getUsername()).isEqualTo("test@example.com");
         assertThat(user.getPassword()).isEqualTo("password123");
-        assertThat(user.getRole()).isEqualTo("Admin");
+        assertThat(user.getRole()).isEqualTo(UserType.ADMIN);
         assertThat(user.getDescription()).isEqualTo("Description test");
         assertThat(user.getPhoneNumber()).isEqualTo("12341234");
         assertThat(user.getFullName()).isEqualTo("John Doe");
