@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.authprofile.service;
 
-import id.ac.ui.cs.advprog.authprofile.dto.RegisterRequest;
+import id.ac.ui.cs.advprog.authprofile.model.dto.RegisterRequest;
 import id.ac.ui.cs.advprog.authprofile.exception.EmailAlreadyExistsException;
 import id.ac.ui.cs.advprog.authprofile.model.User;
 import id.ac.ui.cs.advprog.authprofile.repository.UserRepository;
