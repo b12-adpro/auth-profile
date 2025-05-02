@@ -1,27 +1,47 @@
 package id.ac.ui.cs.advprog.authprofile.service;
 
-import org.junit.jupiter.api.BeforeEach;
+import id.ac.ui.cs.advprog.authprofile.dto.RegisterRequest;
+import id.ac.ui.cs.advprog.authprofile.exception.EmailAlreadyExistsException;
+import id.ac.ui.cs.advprog.authprofile.model.User;
+import id.ac.ui.cs.advprog.authprofile.repository.UserRepository;
+import id.ac.ui.cs.advprog.authprofile.security.JwtUtils;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-@SpringBootTest
-public class AuthServiceTest {
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-    @Autowired
-    private AuthService authService;
+@ExtendWith(MockitoExtension.class)
+class AuthServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private JwtUtils jwtUtils;
+
+    @InjectMocks
+    private AuthServiceImpl authService;
 
     @Test
-    public void testRegisterUser_Failed() {
-        UserRegistrationRequest request = new UserRegistrationRequest("user@email.com", "password");
-        User result = authService.register(request);
-        assertNull(result);  // RED
+    void testRegisterUser_success() {
+        RegisterRequest request = new RegisterRequest("test@mail.com", "password");
+        when(userRepository.existsByEmail("test@mail.com")).thenReturn(false);
+        when(jwtUtils.generateToken(any(User.class))).thenReturn("dummy-jwt");
+
+        String token = authService.registerUser(request);
+        assertEquals("dummy-jwt", token);
+    }
+
+    @Test
+    void testRegisterUser_emailExists() {
+        RegisterRequest request = new RegisterRequest("test@mail.com", "password");
+        when(userRepository.existsByEmail("test@mail.com")).thenReturn(true);
+
+        assertThrows(EmailAlreadyExistsException.class, () -> {
+            authService.registerUser(request);
+        });
     }
 }
