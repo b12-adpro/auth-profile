@@ -20,7 +20,7 @@ class UserRepositoryTest {
 
         Optional<User> found = userRepository.findByEmail("userf@example.com");
         assertTrue(found.isPresent());
-        assertEquals("User Name", found.get().getFullName());
+        assertEquals("User Name Fund", found.get().getFullName());
     }
 
     @Test
@@ -30,7 +30,7 @@ class UserRepositoryTest {
 
         Optional<User> found = userRepository.findByEmail("userd@example.com");
         assertTrue(found.isPresent());
-        assertEquals("User Name", found.get().getFullName());
+        assertEquals("User Name Don", found.get().getFullName());
     }
 
 }
