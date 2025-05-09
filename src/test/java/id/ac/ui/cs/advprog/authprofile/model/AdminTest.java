@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.authentication.model;
+package id.ac.ui.cs.advprog.authprofile.model;
 
 import org.junit.jupiter.api.Test;
 import java.util.UUID;
