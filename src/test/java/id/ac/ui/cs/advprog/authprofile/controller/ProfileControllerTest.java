@@ -61,6 +61,6 @@ class ProfileControllerTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(userId.toString()))
-                .andExpect(jsonPath("$.fullName").value("Updated User"))
+                .andExpect(jsonPath("$.fullName").value("Updated User"));
     }
 }

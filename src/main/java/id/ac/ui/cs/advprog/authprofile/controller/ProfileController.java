@@ -1,13 +1,12 @@
 package id.ac.ui.cs.advprog.authprofile.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.authprofile;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import id.ac.ui.cs.advprog.authprofile.dto.ProfileUpdateDto;
 import id.ac.ui.cs.advprog.authprofile.service.ProfileService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/profile")
@@ -15,12 +14,49 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
+    @Autowired
     public ProfileController(ProfileService profileService) {
+        this.profileService = profileService;
     }
 
-    public ResponseEntity<?> getProfile(authprofile authprofile) {
+    @GetMapping
+    public ResponseEntity<?> getProfile(Authentication authprofile) {
+        String email = extractEmail(authprofile);
+        String role = extractRole(authprofile);
+        try {
+            Object profile = profileService.getProfile(email, role);
+            return ResponseEntity.ok(profile);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    public ResponseEntity<?> updateProfile(@RequestBody ProfileUpdateDto dto, authprofile authprofile) {
+    @PutMapping
+    public ResponseEntity<?> updateProfile(@RequestBody ProfileUpdateDto dto, Authentication authprofile) {
+        String email = extractEmail(authprofile);
+        String role = extractRole(authprofile);
+        try {
+            Object updatedProfile = profileService.updateProfile(dto, email, role);
+            return ResponseEntity.ok(updatedProfile);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Helper method to extract email from the principal.
+    private String extractEmail(Authentication authprofile) {
+        Object principal = authprofile.getPrincipal();
+        if (principal instanceof String) {
+            return (String) principal;
+        } else if (principal instanceof User) {
+            return ((User) principal).getUsername();
+        } else {
+            throw new IllegalStateException("Unknown principal type: " + principal.getClass());
+        }
+    }
+
+    // Helper method to extract role from the authorities.
+    private String extractRole(Authentication authprofile) {
+        return authprofile.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
     }
 }
