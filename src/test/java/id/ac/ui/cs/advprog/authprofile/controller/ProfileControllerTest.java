@@ -45,14 +45,12 @@ class ProfileControllerTest {
         dto.setFullName("Updated User");
         dto.setPhoneNumber("+1112223333");
         dto.setAddress("Updated Address");
-        dto.setProfilePhoto("updated-user.png");
         dto.setPassword("newPassword");
 
         id.ac.ui.cs.advprog.authprofile.model.User updatedUser =
-                new id.ac.ui.cs.advprog.authprofile.model.User("Updated User", "user@example.com", "+1112223333", "hashedNewPassword", "Updated Address");
+                new id.ac.ui.cs.advprog.authprofile.model.User("Fundraiser","Updated User", "user@example.com", "+1112223333", "hashedNewPassword", "Updated Address");
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000003");
         updatedUser.setId(userId);
-        updatedUser.setProfilePhoto("updated-user.png");
 
         Mockito.when(profileService.updateProfile(any(ProfileUpdateDto.class), eq("user@example.com"), eq("USER")))
                 .thenReturn(updatedUser);
@@ -64,8 +62,5 @@ class ProfileControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(userId.toString()))
                 .andExpect(jsonPath("$.fullName").value("Updated User"))
-                .andExpect(jsonPath("$.profilePhoto").value("updated-user.png"));
     }
-
-   
 }
