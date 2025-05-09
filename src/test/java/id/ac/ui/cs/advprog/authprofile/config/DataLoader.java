@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.authprofile.config;
 
-import id.ac.ui.cs.advprog.authprofile.model.*;.model.Admin;
+import id.ac.ui.cs.advprog.authprofile.model.Admin;
 import id.ac.ui.cs.advprog.authprofile.repository.AdminRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.CommandLineRunner;
