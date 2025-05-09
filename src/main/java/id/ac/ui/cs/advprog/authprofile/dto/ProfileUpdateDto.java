@@ -6,7 +6,6 @@ import lombok.Generated;
 @Generated
 @Data
 public class ProfileUpdateDto {
-    private String role;
     private String fullName;
     private String phoneNumber;
     private String password;
