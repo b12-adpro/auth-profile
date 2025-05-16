@@ -21,6 +21,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ProfileController.class)
 @Import(id.ac.ui.cs.advprog.authprofile.config.SecurityConfig.class)
@@ -39,7 +41,7 @@ class ProfileControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    @WithMockUser(username = "user@example.com", roles = {"USER"})
+    @WithMockUser(username = "00000000-0000-0000-0000-000000000003", roles = {"USER"})
     void testUpdateProfile_UserSuccess() throws Exception {
         ProfileUpdateDto dto = new ProfileUpdateDto();
         dto.setFullName("Updated User");
@@ -52,7 +54,7 @@ class ProfileControllerTest {
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000003");
         updatedUser.setId(userId);
 
-        Mockito.when(profileService.updateProfile(any(ProfileUpdateDto.class), eq("user@example.com"), eq("USER")))
+        Mockito.when(profileService.updateProfile(any(ProfileUpdateDto.class), eq("00000000-0000-0000-0000-000000000003"), eq("USER")))
                 .thenReturn(updatedUser);
 
         mockMvc.perform(put("/profile")

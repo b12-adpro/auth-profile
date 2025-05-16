@@ -38,10 +38,11 @@ class AuthenticationServiceImplTest {
         String rawPassword = "admin123";
         String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
         Admin admin = new Admin("Default Admin", email, "1234567890", hashedPassword);
-        admin.setId(UUID.randomUUID());
+        UUID adminId = UUID.randomUUID();
+        admin.setId(adminId);
 
         when(adminRepository.findByEmail(email)).thenReturn(Optional.of(admin));
-        when(jwtTokenProvider.generateToken(email, "ADMIN")).thenReturn("dummy-admin-token");
+        when(jwtTokenProvider.generateToken(adminId.toString(), "ADMIN")).thenReturn("dummy-admin-token");
 
         AuthRequest request = new AuthRequest();
         request.setEmail(email);
@@ -58,11 +59,12 @@ class AuthenticationServiceImplTest {
         String rawPassword = "userpass";
         String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
         User user = new User("Fundraiser", "User Name", email, "1112223333", hashedPassword, "User Address");
-        user.setId(UUID.randomUUID());
+        UUID userId = UUID.randomUUID();
+        user.setId(userId);
 
         when(adminRepository.findByEmail(email)).thenReturn(Optional.empty());
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(jwtTokenProvider.generateToken(email, "USER")).thenReturn("dummy-user-token");
+        when(jwtTokenProvider.generateToken(userId.toString(), "USER")).thenReturn("dummy-user-token");
 
         AuthRequest request = new AuthRequest();
         request.setEmail(email);
