@@ -31,10 +31,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthResponse login(AuthRequest request) throws Exception {
-                String email = request.getEmail();
+        String email = request.getEmail();
         String rawPassword = request.getPassword();
         String role = null;
         String storedHashedPassword = null;
+        String userId = null;
 
         // Check Admins first
         Optional<Admin> adminOpt = adminRepository.findByEmail(email);
@@ -42,12 +43,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Admin admin = adminOpt.get();
             storedHashedPassword = admin.getPassword();
             role = "ADMIN";
+            userId = admin.getId().toString();
         } else {
             Optional<User> userOpt = userRepository.findByEmail(email);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 storedHashedPassword = user.getPassword();
                 role = "USER";
+                userId = user.getId().toString();
             }
         }
 
@@ -60,7 +63,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new Exception("Invalid password for email: " + email);
         }
 
-        String token = jwtTokenProvider.generateToken(email, role);
+        String token = jwtTokenProvider.generateToken(userId, role);
         return new AuthResponse(token);
     }
 

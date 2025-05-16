@@ -3,6 +3,9 @@ package id.ac.ui.cs.advprog.authprofile.service;
 import id.ac.ui.cs.advprog.authprofile.dto.ProfileUpdateDto;
 import id.ac.ui.cs.advprog.authprofile.model.User;
 import id.ac.ui.cs.advprog.authprofile.repository.UserRepository;
+
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -19,9 +22,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public Object updateProfile(ProfileUpdateDto dto, String email, String role) throws Exception {
+    public Object updateProfile(ProfileUpdateDto dto, String userId, String role) throws Exception {
         if ("USER".equalsIgnoreCase(role)) {
-            User user = userRepository.findByEmail(email)
+            User user = userRepository.findById(UUID.fromString(userId))
                     .orElseThrow(() -> new Exception("User not found"));
             if(dto.getFullName() != null) {
                 user.setFullName(dto.getFullName());
@@ -43,9 +46,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public Object getProfile(String email, String role) throws Exception {
+    public Object getProfile(String userId, String role) throws Exception {
         if ("USER".equalsIgnoreCase(role)) {
-            return userRepository.findByEmail(email)
+            return userRepository.findById(UUID.fromString(userId))
                     .orElseThrow(() -> new Exception("User not found"));
         } else {
             throw new Exception("Profile retrieval not allowed for role: " + role);
