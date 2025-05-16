@@ -1,15 +1,11 @@
 package id.ac.ui.cs.advprog.authprofile;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootTest
-@ActiveProfiles("test")
-class AuthenticationApplicationTests {
-
-    @Test
-    void contextLoads() {
+@SpringBootApplication
+public class AuthprofileApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(AuthprofileApplication.class, args);
     }
-    
 }
