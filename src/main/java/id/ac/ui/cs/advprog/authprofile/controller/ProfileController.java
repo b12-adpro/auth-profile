@@ -21,10 +21,10 @@ public class ProfileController {
 
     @GetMapping
     public ResponseEntity<?> getProfile(Authentication authprofile) {
-        String email = extractEmail(authprofile);
+        String userId = extractUserId(authprofile);
         String role = extractRole(authprofile);
         try {
-            Object profile = profileService.getProfile(email, role);
+            Object profile = profileService.getProfile(userId, role);
             return ResponseEntity.ok(profile);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -33,18 +33,18 @@ public class ProfileController {
 
     @PutMapping
     public ResponseEntity<?> updateProfile(@RequestBody ProfileUpdateDto dto, Authentication authprofile) {
-        String email = extractEmail(authprofile);
+        String userId = extractUserId(authprofile);
         String role = extractRole(authprofile);
         try {
-            Object updatedProfile = profileService.updateProfile(dto, email, role);
+            Object updatedProfile = profileService.updateProfile(dto, userId, role);
             return ResponseEntity.ok(updatedProfile);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // Helper method to extract email from the principal.
-    private String extractEmail(Authentication authprofile) {
+    // Helper method to extract id from the principal.
+    private String extractUserId(Authentication authprofile) {
         Object principal = authprofile.getPrincipal();
         if (principal instanceof String) {
             return (String) principal;
