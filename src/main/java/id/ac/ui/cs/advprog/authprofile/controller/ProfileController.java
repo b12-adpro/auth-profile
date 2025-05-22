@@ -43,7 +43,6 @@ public class ProfileController {
         }
     }
 
-    // Helper method to extract id from the principal.
     private String extractUserId(Authentication authprofile) {
         Object principal = authprofile.getPrincipal();
         if (principal instanceof String) {
@@ -55,7 +54,6 @@ public class ProfileController {
         }
     }
 
-    // Helper method to extract role from the authorities.
     private String extractRole(Authentication authprofile) {
         return authprofile.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
     }
