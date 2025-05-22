@@ -3,6 +3,15 @@ plugins {
     jacoco
     id("org.springframework.boot") version "3.4.4"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.sonarqube") version "6.0.1.5171"
+}
+
+sonar {
+  properties {
+    property("sonar.projectKey", "auth-profile")
+    property("sonar.projectName", "auth-profile")
+    property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+  }
 }
 
 group = "id.ac.ui.cs.advprog"
@@ -48,5 +57,9 @@ tasks.test{
 }
 
 tasks.jacocoTestReport{
-    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true) // Keep this if you use the HTML report
+    }
+    dependsOn(tasks.test) // report is always generated after tests run
 }
