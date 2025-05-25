@@ -8,6 +8,12 @@ import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -53,6 +59,26 @@ class ProfileServiceImplTest {
                 profileService.updateProfile(dto, nonExistentId.toString(), "USER"));
         assertTrue(exception.getMessage().contains("User not found"));
     }
-    
+
+    @Test
+    void testGetAllUsers() {
+        // Arrange
+        User user1 = new User("John Doe 1", "john1@example.com", "+123456789", "password", "Address");
+        User user2 = new User("John Doe 2", "john2@example.com", "+123456789", "password", "Address");
+
+        List<User> expectedUsers = Arrays.asList(user1, user2);
+
+        when(userRepository.findAll()).thenReturn(expectedUsers);
+
+        // Act
+        List<User> actualUsers = profileService.getAllUsers();
+
+        // Assert
+        assertEquals(expectedUsers.size(), actualUsers.size(), "The number of users should match");
+        assertEquals(expectedUsers, actualUsers, "The returned list of users should match the expected list");
+
+        // Verify that userRepository.findAll() was called exactly once
+        verify(userRepository, times(1)).findAll();
+    }
 
 }
