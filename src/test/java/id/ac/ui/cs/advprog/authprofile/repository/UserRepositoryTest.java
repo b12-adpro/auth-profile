@@ -15,7 +15,7 @@ class UserRepositoryTest {
 
     @Test
     void testFindByEmailFundraiser() {
-        User user = new User("Fundraiser", "User Name Fund", "userf@example.com", "1112223333", "hashedPassword", "Address");
+        User user = new User("User Name Fund", "userf@example.com", "1112223333", "hashedPassword", "Address");
         userRepository.save(user);
 
         Optional<User> found = userRepository.findByEmail("userf@example.com");
@@ -25,7 +25,7 @@ class UserRepositoryTest {
 
     @Test
     void testFindByEmailDonatur() {
-        User user = new User("Donatur", "User Name Don", "userd@example.com", "1112223333", "hashedPassword", "Address");
+        User user = new User("User Name Don", "userd@example.com", "1112223333", "hashedPassword", "Address");
         userRepository.save(user);
 
         Optional<User> found = userRepository.findByEmail("userd@example.com");

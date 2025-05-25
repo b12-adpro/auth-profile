@@ -70,7 +70,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public User registerUser(UserRegistrationDto registrationDto) {
         String hashedPassword = BCrypt.hashpw(registrationDto.getPassword(), BCrypt.gensalt());
-        User user = new User(
+        User user =     new User(
                 registrationDto.getRole(),
                 registrationDto.getFullName(),
                 registrationDto.getEmail(),
