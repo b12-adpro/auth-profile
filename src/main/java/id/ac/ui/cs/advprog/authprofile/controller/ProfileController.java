@@ -2,7 +2,11 @@ package id.ac.ui.cs.advprog.authprofile.controller;
 
 import id.ac.ui.cs.advprog.authprofile.dto.ProfileUpdateDto;
 import id.ac.ui.cs.advprog.authprofile.service.ProfileService;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
@@ -56,5 +60,20 @@ public class ProfileController {
 
     private String extractRole(Authentication authprofile) {
         return authprofile.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllProfiles(Authentication authprofile) {
+        String role = extractRole(authprofile);
+        if (!role.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+
+        try {
+            List<?> profiles = profileService.getAllUsers();
+            return ResponseEntity.ok(profiles);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
