@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.authprofile.controller;
 
+import id.ac.ui.cs.advprog.authprofile.model.Admin;
+import id.ac.ui.cs.advprog.authprofile.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.authprofile.dto.ProfileUpdateDto;
 import id.ac.ui.cs.advprog.authprofile.security.JwtTokenProvider;
@@ -14,6 +16,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -21,9 +25,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 @WebMvcTest(ProfileController.class)
 @Import(id.ac.ui.cs.advprog.authprofile.config.SecurityConfig.class)
 class ProfileControllerTest {
@@ -64,5 +66,65 @@ class ProfileControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(userId.toString()))
                 .andExpect(jsonPath("$.fullName").value("Updated User"));
+    }
+
+    @Test
+    @WithMockUser(username = "adminId123", roles = {"ADMIN"}) // Mock user with ADMIN role
+    void testGetAllProfiles_AdminAccessSuccess() throws Exception {
+        // Create mock user data
+        User user1 = new User("User One", "user1@example.com", "111", "pass1", "Address 1");
+        user1.setId(UUID.randomUUID());
+        User user2 = new User("User Two", "user2@example.com", "222", "pass2", "Address 2");
+        user2.setId(UUID.randomUUID());
+        List<User> mockUsers = Arrays.asList(user1, user2);
+
+        // Mock the service call to return the list of users
+        Mockito.when(profileService.getAllUsers()).thenReturn(mockUsers);
+
+        // Perform the GET request and assert the response
+        mockMvc.perform(get("/profile/all")
+                        .with(csrf())) // CSRF is often not needed for GET, but including it doesn't hurt.
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray()) // Check if the response is a JSON array
+                .andExpect(jsonPath("$.length()").value(2)) // Check the number of items in the array
+                .andExpect(jsonPath("$[0].fullName").value("User One"))
+                .andExpect(jsonPath("$[1].email").value("user2@example.com"));
+
+        // Verify that the service method was called
+        Mockito.verify(profileService, Mockito.times(1)).getAllUsers();
+    }
+
+    @Test
+    @WithMockUser(username = "userId123", roles = {"USER"}) // Mock user with non-ADMIN role
+    void testGetAllProfiles_UserAccessDenied() throws Exception {
+        // No need to mock profileService.getAllUsers() as it should not be called
+        // for a non-admin user due to the early return in the controller.
+
+        // Perform the GET request and assert forbidden status
+        mockMvc.perform(get("/profile/all")
+                        .with(csrf()))
+                .andExpect(status().isForbidden())
+                // Verify the body content (if your controller returns a specific message)
+                .andExpect(content().string("Access denied"));
+
+        // Verify that the service method was NOT called
+        Mockito.verify(profileService, Mockito.never()).getAllUsers();
+    }
+
+    @Test
+    @WithMockUser(username = "adminId123", roles = {"ADMIN"})
+    void testGetAllProfiles_ServiceThrowsException() throws Exception {
+        // Mock the service call to throw an exception
+        Mockito.when(profileService.getAllUsers()).thenThrow(new RuntimeException("Database error"));
+
+        // Perform the GET request and assert bad request status
+        mockMvc.perform(get("/profile/all")
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Database error")); // Check if the error message is returned
+
+        // Verify that the service method was called
+        Mockito.verify(profileService, Mockito.times(1)).getAllUsers();
     }
 }
