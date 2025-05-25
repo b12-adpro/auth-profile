@@ -71,7 +71,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public User registerUser(UserRegistrationDto registrationDto) {
         String hashedPassword = BCrypt.hashpw(registrationDto.getPassword(), BCrypt.gensalt());
         User user =     new User(
-                registrationDto.getRole(),
                 registrationDto.getFullName(),
                 registrationDto.getEmail(),
                 registrationDto.getPhoneNumber(),
