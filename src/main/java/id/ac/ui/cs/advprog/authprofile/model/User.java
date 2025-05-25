@@ -18,9 +18,6 @@ public class User {
     @Column(name="id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "role", nullable = false)
-    private String role;
-
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
@@ -39,8 +36,7 @@ public class User {
     public User() {
     }
 
-    public User(String role, String fullName, String email, String phoneNumber, String password, String address) {
-        this.role = role;
+    public User(String fullName, String email, String phoneNumber, String password, String address) {
         this.fullName = fullName;
         this.email = email;
         this.phoneNumber = phoneNumber;
