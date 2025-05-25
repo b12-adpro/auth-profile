@@ -24,7 +24,7 @@ class ProfileServiceImplTest {
 
     @Test
     void testUpdateUserProfileSuccess() throws Exception {
-        User user = new User("Fundraiser", "John Doe", "john@example.com", "+123456789", "oldPassword", "Old Address");
+        User user = new User("John Doe", "john@example.com", "+123456789", "oldPassword", "Old Address");
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         user.setId(userId);
         Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
