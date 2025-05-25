@@ -26,7 +26,7 @@ class UserTest {
 
     @Test
     void testUserToStringFundraiser() {
-        User user = new User("Fundraiser", "User Name Fund", "userf@example.com", "1112223333", "userSecret", "User address");
+        User user = new User("User Name Fund", "userf@example.com", "1112223333", "userSecret", "User address");
         user.setId(UUID.fromString("00000000-0000-0000-0000-000000000006"));
         String toString = user.toString();
         assertTrue(toString.contains("User"));
@@ -53,7 +53,7 @@ class UserTest {
 
     @Test
     void testUserToStringDonatur() {
-        User user = new User("Donatur", "User Name Don", "userd@example.com", "1112223333", "userSecret", "User address");
+        User user = new User("User Name Don", "userd@example.com", "1112223333", "userSecret", "User address");
         user.setId(UUID.fromString("00000000-0000-0000-0000-100000000006"));
         String toString = user.toString();
         assertTrue(toString.contains("User"));
