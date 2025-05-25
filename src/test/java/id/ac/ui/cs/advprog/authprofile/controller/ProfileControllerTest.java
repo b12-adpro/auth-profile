@@ -50,7 +50,7 @@ class ProfileControllerTest {
         dto.setPassword("newPassword");
 
         id.ac.ui.cs.advprog.authprofile.model.User updatedUser =
-                new id.ac.ui.cs.advprog.authprofile.model.User("Fundraiser","Updated User", "user@example.com", "+1112223333", "hashedNewPassword", "Updated Address");
+                new id.ac.ui.cs.advprog.authprofile.model.User("Updated User", "user@example.com", "+1112223333", "hashedNewPassword", "Updated Address");
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000003");
         updatedUser.setId(userId);
 
