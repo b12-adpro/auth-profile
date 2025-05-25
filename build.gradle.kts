@@ -16,7 +16,15 @@ sonar {
 
 group = "id.ac.ui.cs.advprog"
 version = "0.0.1-SNAPSHOT"
-val dotenvJavaVersion = "5.2.2"
+val springBootVersion="3.4.4"
+val springDependencyManagementVersion="1.1.7"
+val sonarQubeVersion="6.0.1.5171"
+val dotenvJavaVersion="5.2.2"
+val springSecurityTestVersion="6.0.2"
+val springSecurityCryptoVersion="6.0.2"
+val jjwtVersion="0.11.5"
+val postgresqlVersion="42.6.0"
+val h2Version="2.2.220"
 
 java {
     toolchain {
@@ -39,17 +47,17 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    testImplementation("org.springframework.security:spring-security-test:6.0.2")
+    testImplementation("org.springframework.security:spring-security-test:$springSecurityTestVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+    implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
 
-    implementation("org.springframework.security:spring-security-crypto:6.0.2")
+    implementation("org.springframework.security:spring-security-crypto:$springSecurityCryptoVersion")
 
-    runtimeOnly("org.postgresql:postgresql:42.6.0")
-    runtimeOnly("com.h2database:h2:2.2.220")
+    runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
+    runtimeOnly("com.h2database:h2:$h2Version")
 
 
     compileOnly("org.projectlombok:lombok")
