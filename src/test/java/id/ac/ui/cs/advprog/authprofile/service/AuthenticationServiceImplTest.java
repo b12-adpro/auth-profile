@@ -58,7 +58,7 @@ class AuthenticationServiceImplTest {
         String email = "user@example.com";
         String rawPassword = "userpass";
         String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
-        User user = new User("Fundraiser", "User Name", email, "1112223333", hashedPassword, "User Address");
+        User user = new User("User Name", email, "1112223333", hashedPassword, "User Address");
         UUID userId = UUID.randomUUID();
         user.setId(userId);
 
@@ -110,14 +110,13 @@ class AuthenticationServiceImplTest {
     @Test
     void testRegisterUser() {
         UserRegistrationDto dto = new UserRegistrationDto();
-        dto.setRole("Fundraiser");
         dto.setFullName("John Doe");
         dto.setEmail("john@example.com");
         dto.setPhoneNumber("+123456789");
         dto.setPassword("password");
         dto.setAddress("123 Main St");
 
-        User savedUser = new User(dto.getRole(), dto.getFullName(), dto.getEmail(), dto.getPhoneNumber(),
+        User savedUser = new User(dto.getFullName(), dto.getEmail(), dto.getPhoneNumber(),
                 BCrypt.hashpw(dto.getPassword(), BCrypt.gensalt()), dto.getAddress());
         savedUser.setId(UUID.randomUUID());
 
