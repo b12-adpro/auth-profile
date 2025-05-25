@@ -16,7 +16,7 @@ sonar {
 
 group = "id.ac.ui.cs.advprog"
 version = "0.0.1-SNAPSHOT"
-java-dotenv = "5.2.2"
+val dotenvJavaVersion = "5.2.2"
 
 java {
     toolchain {
@@ -58,7 +58,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("io.github.cdimascio:java-dotenv:$java-dotenv")
+    implementation("io.github.cdimascio:java-dotenv:$dotenvJavaVersion")
 }
 
 tasks.register<Test>("unitTest") {
