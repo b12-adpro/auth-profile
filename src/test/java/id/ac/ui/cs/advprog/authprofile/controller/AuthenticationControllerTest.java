@@ -84,14 +84,13 @@ class AuthenticationControllerTest {
     @WithAnonymousUser
     void testRegisterUser() throws Exception {
         UserRegistrationDto dto = new UserRegistrationDto();
-        dto.setRole("Fundraiser");
         dto.setFullName("John Doe");
         dto.setEmail("john@example.com");
         dto.setPhoneNumber("+123456789");
         dto.setPassword("password");
         dto.setAddress("123 Main St");
 
-        User user = new User(dto.getRole(), dto.getFullName(), dto.getEmail(), dto.getPhoneNumber(),
+        User user = new User(dto.getFullName(), dto.getEmail(), dto.getPhoneNumber(),
                 dto.getPassword(), dto.getAddress());
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         user.setId(userId);
