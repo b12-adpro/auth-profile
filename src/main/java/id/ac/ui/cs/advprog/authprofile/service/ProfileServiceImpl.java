@@ -4,6 +4,7 @@ import id.ac.ui.cs.advprog.authprofile.dto.ProfileUpdateDto;
 import id.ac.ui.cs.advprog.authprofile.model.User;
 import id.ac.ui.cs.advprog.authprofile.repository.UserRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,11 @@ public class ProfileServiceImpl implements ProfileService {
     @Autowired
     public ProfileServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     @Override
