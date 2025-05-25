@@ -8,8 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      DOCKER_FULL_IMAGE_NAME: docker.io/rooout/auth-profile:latest
 
     steps:
       - name: Checkout repository
@@ -27,10 +25,9 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Build and Push Docker Image
-        # Use the env variables defined above for image name and tag
         run: |
-          docker build -t ${{ env.DOCKER_FULL_IMAGE_NAME }} .
-          docker push ${{ env.DOCKER_FULL_IMAGE_NAME }}
+          docker build -t ${{ secrets.DOCKER_FULL_IMAGE_NAME }} .
+          docker push ${{ secrets.DOCKER_FULL_IMAGE_NAME }}
 
       - name: Verify Deployment (Optional)
         # This step is mostly for verification. Koyeb will handle the actual redeploy.
