@@ -1,7 +1,5 @@
 package id.ac.ui.cs.advprog.authprofile.controller;
 
-import id.ac.ui.cs.advprog.authprofile.model.Admin;
-import id.ac.ui.cs.advprog.authprofile.model.User;
 import id.ac.ui.cs.advprog.authprofile.dto.ProfileUpdateDto;
 import id.ac.ui.cs.advprog.authprofile.service.ProfileService;
 
@@ -65,17 +63,17 @@ public class ProfileController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<User>> getAllProfiles(Authentication authprofile) {
+    public ResponseEntity<?> getAllProfiles(Authentication authprofile) {
         String role = extractRole(authprofile);
         if (!role.equals("ADMIN")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
         }
 
         try {
-            List<User> profiles = profileService.getAllUsers();
+            List<?> profiles = profileService.getAllUsers();
             return ResponseEntity.ok(profiles);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
