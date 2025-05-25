@@ -10,7 +10,6 @@ class UserTest {
     void testUserGettersAndSettersFundraiser() {
         User user = new User();
         user.setId(UUID.fromString("00000000-0000-0000-0000-000000000005"));
-        user.setRole("Fundraiser");
         user.setFullName("User Name Fund");
         user.setEmail("userf@example.com");
         user.setPhoneNumber("1112223333");
@@ -18,7 +17,6 @@ class UserTest {
         user.setAddress("User address");
 
         assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000005"), user.getId());
-        assertEquals("Fundraiser", user.getRole());
         assertEquals("User Name Fund", user.getFullName());
         assertEquals("userf@example.com", user.getEmail());
         assertEquals("1112223333", user.getPhoneNumber());
@@ -39,7 +37,6 @@ class UserTest {
     void testUserGettersAndSettersDonatur() {
         User user = new User();
         user.setId(UUID.fromString("00000000-0000-0000-0000-100000000005"));
-        user.setRole("Donatur");
         user.setFullName("User Name Don");
         user.setEmail("userd@example.com");
         user.setPhoneNumber("1112223333");
@@ -47,7 +44,6 @@ class UserTest {
         user.setAddress("User address");
 
         assertEquals(UUID.fromString("00000000-0000-0000-0000-100000000005"), user.getId());
-        assertEquals("Donatur", user.getRole());
         assertEquals("User Name Don", user.getFullName());
         assertEquals("userd@example.com", user.getEmail());
         assertEquals("1112223333", user.getPhoneNumber());
