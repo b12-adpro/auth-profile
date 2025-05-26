@@ -109,7 +109,7 @@ class ProfileControllerTest {
         mockMvc.perform(get("/profile/all")
                         .with(csrf()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Database error")); // Check if the error message is returned
+                .andExpect(content().string("Database error"));
 
         Mockito.verify(profileService, Mockito.times(1)).getAllUsers();
     }
