@@ -7,7 +7,7 @@ import id.ac.ui.cs.advprog.authprofile.model.User;
 
 public interface AuthenticationService {
 
-    AuthResponse login(AuthRequest request);
+    AuthResponse login(AuthRequest request) throws Exception;
 
     User registerUser(UserRegistrationDto registrationDto);
 

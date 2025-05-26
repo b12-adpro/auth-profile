@@ -30,7 +30,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthResponse login(AuthRequest request){
+    public AuthResponse login(AuthRequest request) throws Exception {
         String email = request.getEmail();
         String rawPassword = request.getPassword();
         String role = null;
