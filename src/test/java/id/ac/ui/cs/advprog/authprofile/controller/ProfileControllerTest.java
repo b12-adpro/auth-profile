@@ -1,6 +1,5 @@
 package id.ac.ui.cs.advprog.authprofile.controller;
 
-import id.ac.ui.cs.advprog.authprofile.model.Admin;
 import id.ac.ui.cs.advprog.authprofile.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.authprofile.dto.ProfileUpdateDto;
