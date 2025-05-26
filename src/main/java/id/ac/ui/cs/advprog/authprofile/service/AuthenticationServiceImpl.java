@@ -37,7 +37,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String storedHashedPassword = null;
         String userId = null;
 
-        // Check Admins first
         Optional<Admin> adminOpt = adminRepository.findByEmail(email);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
@@ -58,7 +57,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new Exception("No account found for email: " + email);
         }
 
-        // Verify password using BCrypt.
         if (!BCrypt.checkpw(rawPassword, storedHashedPassword)) {
             throw new Exception("Invalid password for email: " + email);
         }
