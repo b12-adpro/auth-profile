@@ -78,7 +78,7 @@ public class ProfileController {
         }
     }
 
-    @GetMapping("/id")
+    @GetMapping("/id-email")
     public ResponseEntity<?> getUserIdByEmail(@RequestParam String email, Authentication authprofile) {
         String role = extractRole(authprofile);
         if (!role.equals("ADMIN")) {
@@ -91,4 +91,11 @@ public class ProfileController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
+
+    @GetMapping("/id")
+    public ResponseEntity<?> getMyId(Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+        return ResponseEntity.ok(userId);
+    }
+
 }
