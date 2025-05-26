@@ -59,7 +59,6 @@ class ProfileServiceImplTest {
 
     @Test
     void testGetAllUsers() {
-        // Arrange
         User user1 = new User("John Doe 1", "john1@example.com", "+123456789", "password", "Address");
         User user2 = new User("John Doe 2", "john2@example.com", "+123456789", "password", "Address");
 
@@ -67,15 +66,40 @@ class ProfileServiceImplTest {
 
         when(userRepository.findAll()).thenReturn(expectedUsers);
 
-        // Act
         List<User> actualUsers = profileService.getAllUsers();
 
-        // Assert
         assertEquals(expectedUsers.size(), actualUsers.size(), "The number of users should match");
         assertEquals(expectedUsers, actualUsers, "The returned list of users should match the expected list");
 
-        // Verify that userRepository.findAll() was called exactly once
         verify(userRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testGetUserIdByEmail_Success() throws Exception {
+        String email = "jane@example.com";
+        UUID expectedId = UUID.fromString("00000000-0000-0000-0000-000000000007");
+        User user = new User("Jane Doe", email, "+123456789", "password", "Address");
+        user.setId(expectedId);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        UUID actualId = profileService.getUserIdByEmail(email);
+
+        assertEquals(expectedId, actualId);
+        verify(userRepository, times(1)).findByEmail(email);
+    }
+
+    @Test
+    void testGetUserIdByEmail_UserNotFound() {
+        String email = "notfound@example.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            profileService.getUserIdByEmail(email);
+        });
+
+        assertEquals("User not found with email: " + email, exception.getMessage());
+        verify(userRepository, times(1)).findByEmail(email);
     }
 
 }
