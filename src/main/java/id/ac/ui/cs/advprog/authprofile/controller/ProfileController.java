@@ -78,20 +78,6 @@ public class ProfileController {
         }
     }
 
-    @GetMapping("/id-email")
-    public ResponseEntity<?> getUserIdByEmail(@RequestParam String email, Authentication authprofile) {
-        String role = extractRole(authprofile);
-        if (!role.equals("ADMIN")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-        }
-        try {
-            UUID userId = profileService.getUserIdByEmail(email);
-            return ResponseEntity.ok(userId);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
-
     @GetMapping("/id")
     public ResponseEntity<?> getMyId(Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
