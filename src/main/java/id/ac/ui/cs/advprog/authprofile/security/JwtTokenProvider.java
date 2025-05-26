@@ -58,7 +58,6 @@ public class JwtTokenProvider {
             Jwts.parser().setSigningKey(getSigningKey()).parseClaimsJws(authToken);
             return true;
         } catch (Exception ex) {
-            // Token is invalid (expired, tampered, etc.)
         }
         return false;
     }
