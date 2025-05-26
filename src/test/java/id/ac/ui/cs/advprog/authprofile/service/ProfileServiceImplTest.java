@@ -39,14 +39,11 @@ class ProfileServiceImplTest {
         dto.setPhoneNumber("+987654321");
         dto.setAddress("New Address");
         dto.setPassword("newPassword");
-        // Stub save method to return the updated user.
         Mockito.when(userRepository.save(Mockito.any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         User updatedUser = (User) profileService.updateProfile(dto, userId.toString(), "USER");
-        // Verify that fields are updated.
         assertEquals("John Smith", updatedUser.getFullName());
         assertEquals("+987654321", updatedUser.getPhoneNumber());
         assertEquals("New Address", updatedUser.getAddress());
-        // Verify that the password is hashed (i.e. not equal to plain "newPassword").
         assertNotEquals("newPassword", updatedUser.getPassword());
     }
 

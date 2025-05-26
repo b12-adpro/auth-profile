@@ -4,6 +4,7 @@ import id.ac.ui.cs.advprog.authprofile.dto.ProfileUpdateDto;
 import id.ac.ui.cs.advprog.authprofile.service.ProfileService;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -74,6 +75,20 @@ public class ProfileController {
             return ResponseEntity.ok(profiles);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/id")
+    public ResponseEntity<?> getUserIdByEmail(@RequestParam String email, Authentication authprofile) {
+        String role = extractRole(authprofile);
+        if (!role.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+        try {
+            UUID userId = profileService.getUserIdByEmail(email);
+            return ResponseEntity.ok(userId);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 }

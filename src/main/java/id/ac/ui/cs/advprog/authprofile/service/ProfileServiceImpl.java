@@ -60,4 +60,12 @@ public class ProfileServiceImpl implements ProfileService {
             throw new Exception("Profile retrieval not allowed for role: " + role);
         }
     }
+
+    @Override
+    public UUID getUserIdByEmail(String email) throws Exception {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new Exception("User not found with email: " + email));
+        return user.getId();
+    }
+
 }
