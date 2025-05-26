@@ -4,7 +4,6 @@ import id.ac.ui.cs.advprog.authprofile.dto.ProfileUpdateDto;
 import id.ac.ui.cs.advprog.authprofile.service.ProfileService;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
