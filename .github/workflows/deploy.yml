@@ -54,30 +54,59 @@ jobs:
           echo "Monitoring deployment status..."
           ATTEMPTS=0
           MAX_ATTEMPTS=20
-          SLEEP_TIME=30
-          
+          SLEEP_TIME=10
+
           while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
             STATUS=$(curl -s -X GET "https://app.koyeb.com/v1/deployments/${{ steps.redeploy.outputs.deployment_id }}" \
               -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.deployment.status')
-            
-            echo "Current status: $STATUS"
-            
+
+            echo "Current deployment status: $STATUS"
+
             if [ "$STATUS" == "SUCCESS" ]; then
-              echo "Deployment successful."
-              exit 0
+              echo "Deployment succeeded."
+              break
             elif [ "$STATUS" == "FAILED" ]; then
               echo "Deployment failed."
               exit 1
             fi
-            
+
             ATTEMPTS=$((ATTEMPTS+1))
             sleep $SLEEP_TIME
           done
 
-          echo "Deployment status check timed out."
+          if [ "$STATUS" != "SUCCESS" ]; then
+            echo "Deployment status check timed out."
+            exit 1
+          fi
+
+          echo "Checking service health status..."
+          ATTEMPTS=0
+          MAX_HEALTH_ATTEMPTS=10
+
+          while [ $ATTEMPTS -lt $MAX_HEALTH_ATTEMPTS ]; do
+            SERVICE_STATUS=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}" \
+              -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.service.status')
+
+            echo "Current service status: $SERVICE_STATUS"
+
+            if [ "$SERVICE_STATUS" == "HEALTHY" ]; then
+              echo "Service is healthy. Proceeding..."
+              exit 0
+            elif [ "$SERVICE_STATUS" == "FAILED" ]; then
+              echo "Service entered FAILED state."
+              exit 1
+            fi
+
+            ATTEMPTS=$((ATTEMPTS+1))
+            sleep $SLEEP_TIME
+          done
+
+          echo "Service health check timed out."
           exit 1
         env:
           KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
+          KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}
+
 
       - name: Rollback if Deployment Failed
         if: failure()
