@@ -54,7 +54,7 @@ jobs:
           echo "Monitoring deployment status..."
           ATTEMPTS=0
           MAX_ATTEMPTS=20
-          SLEEP_TIME=10
+          SLEEP_TIME=30
           
           while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
             STATUS=$(curl -s -X GET "https://app.koyeb.com/v1/deployments/${{ steps.redeploy.outputs.deployment_id }}" \
