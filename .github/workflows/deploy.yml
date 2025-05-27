@@ -36,7 +36,6 @@ jobs:
           prev_id=$(curl -s "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments" \
             -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | \
             jq -r '.deployments[] | select(.status=="SUCCESS") | .id' | head -n 1)
-          echo "Previous successful deployment: $prev_id"
           echo "prev_deployment_id=$prev_id" >> $GITHUB_OUTPUT
 
       - name: Get Current Latest Deployment ID
@@ -45,11 +44,9 @@ jobs:
           echo "📦 Fetching current latest deployment ID..."
           current_latest=$(curl -s "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments" \
             -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.deployments[0].id')
-          echo "Current latest deployment ID: $current_latest"
           echo "current_latest_id=$current_latest" >> $GITHUB_OUTPUT
 
       - name: Trigger New Deployment
-        id: trigger_redeploy
         run: |
           echo "🚀 Triggering new deployment..."
           curl -s -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy" \
@@ -59,6 +56,7 @@ jobs:
 
       - name: Wait and Check Deployment Status
         id: check_status
+        continue-on-error: true
         run: |
           MAX_ATTEMPTS=20
           echo "⏳ Waiting for new deployment to appear..."
@@ -78,6 +76,7 @@ jobs:
 
           if [ -z "$latest_deployment_id" ] || [ "$latest_deployment_id" = "${{ steps.current_latest.outputs.current_latest_id }}" ]; then
             echo "❌ No new deployment detected."
+            echo "deployment_status=FAILED" >> $GITHUB_OUTPUT
             exit 1
           fi
 
@@ -90,9 +89,11 @@ jobs:
 
             if [ "$status" = "SUCCESS" ]; then
               echo "✅ Deployment succeeded."
+              echo "deployment_status=SUCCESS" >> $GITHUB_OUTPUT
               exit 0
             elif [ "$status" = "FAILED" ]; then
               echo "❌ Deployment failed."
+              echo "deployment_status=FAILED" >> $GITHUB_OUTPUT
               exit 1
             fi
 
@@ -100,10 +101,11 @@ jobs:
           done
 
           echo "❌ Deployment did not complete within expected time."
+          echo "deployment_status=FAILED" >> $GITHUB_OUTPUT
           exit 1
 
       - name: Rollback if Deployment Failed
-        if: failure()
+        if: ${{ steps.check_status.outputs.deployment_status == 'FAILED' }}
         run: |
           echo "⚠️ Rolling back to previous deployment: ${{ steps.get_previous.outputs.prev_deployment_id }}"
           curl -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments/${{ steps.get_previous.outputs.prev_deployment_id }}/redeploy" \
