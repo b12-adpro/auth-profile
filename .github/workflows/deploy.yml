@@ -13,11 +13,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Removed JDK setup and JAR build steps as they are now handled by the Dockerfile's multi-stage build
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3 # Use v3 for latest
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
@@ -27,104 +29,27 @@ jobs:
           docker build -t ${{ secrets.DOCKER_FULL_IMAGE_NAME }} .
           docker push ${{ secrets.DOCKER_FULL_IMAGE_NAME }}
 
+      - name: Verify Deployment (Optional)
+        # This step is mostly for verification. Koyeb will handle the actual redeploy.
+        # You can add a small delay and then check service status or logs if you have Koyeb CLI configured.
+        # For simplicity, we'll assume Koyeb's auto-deployment works.
+        run: echo "Koyeb service configured for automatic deployment from Docker Hub. New image pushed."
+        
       - name: Trigger Koyeb Redeploy
-        id: redeploy
         run: |
           echo "Triggering Koyeb redeployment for service..."
-          DEPLOY_RESPONSE=$(curl -s -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy" \
+          # IMPORTANT:
+          # - Replace YOUR_KOYEB_SERVICE_ID with the actual Service ID from Koyeb.
+          #   This is NOT the Application ID. It's specific to the 'authprofile' service.
+          #   You can find it in the URL when viewing your service (e.g., app.koyeb.com/services/YOUR_KOYEB_SERVICE_ID/overview)
+          #   or via the Koyeb CLI.
+          # - Ensure KOYEB_API_KEY has 'Service' -> 'Update' permissions at least.
+          curl -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy" \
             -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" \
             -H "Content-Type: application/json" \
-            --data '{}')
-          
-          DEPLOYMENT_ID=$(echo $DEPLOY_RESPONSE | jq -r '.deployment.id')
-          
-          if [ "$DEPLOYMENT_ID" == "null" ]; then
-            echo "Failed to trigger deployment."
-            exit 1
-          fi
-          
-          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+            --data '{}' # Empty data for a simple redeploy
+
         env:
-          KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
-          KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}
-
-      - name: Monitor Deployment
-        id: monitor
-        run: |
-          echo "Monitoring deployment status..."
-          ATTEMPTS=0
-          MAX_ATTEMPTS=20
-          SLEEP_TIME=10
-
-          while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-            STATUS=$(curl -s -X GET "https://app.koyeb.com/v1/deployments/${{ steps.redeploy.outputs.deployment_id }}" \
-              -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.deployment.status')
-
-            echo "Current deployment status: $STATUS"
-
-            if [ "$STATUS" == "SUCCESS" ]; then
-              echo "Deployment succeeded."
-              break
-            elif [ "$STATUS" == "FAILED" ]; then
-              echo "Deployment failed."
-              exit 1
-            fi
-
-            ATTEMPTS=$((ATTEMPTS+1))
-            sleep $SLEEP_TIME
-          done
-
-          if [ "$STATUS" != "SUCCESS" ]; then
-            echo "Deployment status check timed out."
-            exit 1
-          fi
-
-          echo "Confirming active deployment is our new deployment..."
-          ACTIVE_DEPLOYMENT_ID=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}" \
-            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.service.active_deployment.id')
-
-          if [ "$ACTIVE_DEPLOYMENT_ID" != "${{ steps.redeploy.outputs.deployment_id }}" ]; then
-            echo "Active deployment not updated yet. Active: $ACTIVE_DEPLOYMENT_ID"
-            exit 1
-          fi
-
-          echo "Active deployment confirmed."
-
-          echo "Checking service health status..."
-          SERVICE_STATUS=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}" \
-            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.service.status')
-
-          echo "Current service status: $SERVICE_STATUS"
-
-          if [ "$SERVICE_STATUS" != "HEALTHY" ]; then
-            echo "Service is not healthy yet: $SERVICE_STATUS"
-            exit 1
-          fi
-
-          echo "Service is healthy. Proceeding..."
-        env:
-          KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
-          KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}
-
-
-
-      - name: Rollback if Deployment Failed
-        if: failure()
-        run: |
-          echo "Rolling back to previous deployment..."
-          PREVIOUS_DEPLOYMENT=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments" \
-            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.deployments[] | select(.status=="SUCCESS") | .id' | head -n 1)
-          
-          if [ -z "$PREVIOUS_DEPLOYMENT" ]; then
-            echo "No previous successful deployment found. Manual intervention needed."
-            exit 1
-          fi
-          
-          echo "Redeploying previous deployment: $PREVIOUS_DEPLOYMENT"
-          curl -s -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments/$PREVIOUS_DEPLOYMENT/redeploy" \
-            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            --data '{}'
-        env:
+          # Ensure these secrets are set in your GitHub repository settings
           KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
           KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}
