@@ -24,91 +24,78 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          echo "🔨 Building Docker image..."
           docker build -t ${{ secrets.DOCKER_FULL_IMAGE_NAME }} .
-          echo "📦 Pushing Docker image..."
           docker push ${{ secrets.DOCKER_FULL_IMAGE_NAME }}
 
-      - name: Get Previous Deployment ID
-        id: get_previous
+      - name: Trigger Koyeb Redeploy
+        id: redeploy
         run: |
-          echo "📦 Fetching previous successful deployment ID..."
-          prev_id=$(curl -s "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments" \
-            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | \
-            jq -r '.deployments[] | select(.status=="SUCCESS") | .id' | head -n 1)
-          echo "prev_deployment_id=$prev_id" >> $GITHUB_OUTPUT
-
-      - name: Get Current Latest Deployment ID
-        id: current_latest
-        run: |
-          echo "📦 Fetching current latest deployment ID..."
-          current_latest=$(curl -s "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments" \
-            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.deployments[0].id')
-          echo "current_latest_id=$current_latest" >> $GITHUB_OUTPUT
-
-      - name: Trigger New Deployment
-        run: |
-          echo "🚀 Triggering new deployment..."
-          curl -s -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy" \
+          echo "Triggering Koyeb redeployment for service..."
+          DEPLOY_RESPONSE=$(curl -s -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy" \
             -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" \
-            -H "Content-Type: application/json" --data '{}'
-          echo "Redeploy triggered."
-
-      - name: Wait and Check Deployment Status
-        id: check_status
-        continue-on-error: true
-        run: |
-          MAX_ATTEMPTS=20
-          echo "⏳ Waiting for new deployment to appear..."
-          for ((i=1; i<=MAX_ATTEMPTS; i++)); do
-            latest_deployment_id=$(curl -s "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments" \
-              -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.deployments[0].id')
-
-            if [ "$latest_deployment_id" != "${{ steps.current_latest.outputs.current_latest_id }}" ]; then
-              echo "✅ New deployment detected: $latest_deployment_id"
-              echo "latest_deployment_id=$latest_deployment_id" >> $GITHUB_OUTPUT
-              break
-            fi
-
-            echo "Attempt $i/$MAX_ATTEMPTS - Waiting for new deployment..."
-            sleep 5
-          done
-
-          if [ -z "$latest_deployment_id" ] || [ "$latest_deployment_id" = "${{ steps.current_latest.outputs.current_latest_id }}" ]; then
-            echo "❌ No new deployment detected."
-            echo "deployment_status=FAILED" >> $GITHUB_OUTPUT
+            -H "Content-Type: application/json" \
+            --data '{}')
+          
+          DEPLOYMENT_ID=$(echo $DEPLOY_RESPONSE | jq -r '.deployment.id')
+          
+          if [ "$DEPLOYMENT_ID" == "null" ]; then
+            echo "Failed to trigger deployment."
             exit 1
           fi
+          
+          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+        env:
+          KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
+          KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}
 
-          echo "🔍 Checking new deployment status..."
-          for ((i=1; i<=MAX_ATTEMPTS; i++)); do
-            status=$(curl -s "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments/$latest_deployment_id" \
-              -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.status')
-
-            echo "Attempt $i/$MAX_ATTEMPTS - Deployment status: $status"
-
-            if [ "$status" = "SUCCESS" ]; then
-              echo "✅ Deployment succeeded."
-              echo "deployment_status=SUCCESS" >> $GITHUB_OUTPUT
+      - name: Monitor Deployment Status
+        id: monitor
+        run: |
+          echo "Monitoring deployment status..."
+          ATTEMPTS=0
+          MAX_ATTEMPTS=20
+          SLEEP_TIME=10
+          
+          while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+            STATUS=$(curl -s -X GET "https://app.koyeb.com/v1/deployments/${{ steps.redeploy.outputs.deployment_id }}" \
+              -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.deployment.status')
+            
+            echo "Current status: $STATUS"
+            
+            if [ "$STATUS" == "SUCCESS" ]; then
+              echo "Deployment successful."
               exit 0
-            elif [ "$status" = "FAILED" ]; then
-              echo "❌ Deployment failed."
-              echo "deployment_status=FAILED" >> $GITHUB_OUTPUT
+            elif [ "$STATUS" == "FAILED" ]; then
+              echo "Deployment failed."
               exit 1
             fi
-
-            sleep 5
+            
+            ATTEMPTS=$((ATTEMPTS+1))
+            sleep $SLEEP_TIME
           done
 
-          echo "❌ Deployment did not complete within expected time."
-          echo "deployment_status=FAILED" >> $GITHUB_OUTPUT
+          echo "Deployment status check timed out."
           exit 1
+        env:
+          KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
 
       - name: Rollback if Deployment Failed
-        if: ${{ steps.check_status.outputs.deployment_status == 'FAILED' }}
+        if: failure()
         run: |
-          echo "⚠️ Rolling back to previous deployment: ${{ steps.get_previous.outputs.prev_deployment_id }}"
-          curl -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments/${{ steps.get_previous.outputs.prev_deployment_id }}/redeploy" \
+          echo "Rolling back to previous deployment..."
+          PREVIOUS_DEPLOYMENT=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments" \
+            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.deployments[] | select(.status=="SUCCESS") | .id' | head -n 1)
+          
+          if [ -z "$PREVIOUS_DEPLOYMENT" ]; then
+            echo "No previous successful deployment found. Manual intervention needed."
+            exit 1
+          fi
+          
+          echo "Redeploying previous deployment: $PREVIOUS_DEPLOYMENT"
+          curl -s -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments/$PREVIOUS_DEPLOYMENT/redeploy" \
             -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" \
-            -H "Content-Type: application/json"
-          echo "Rollback triggered."
+            -H "Content-Type: application/json" \
+            --data '{}'
+        env:
+          KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
+          KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}
