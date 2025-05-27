@@ -48,7 +48,7 @@ jobs:
           KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
           KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}
 
-      - name: Monitor Deployment Status
+      - name: Monitor Deployment
         id: monitor
         run: |
           echo "Monitoring deployment status..."
@@ -79,33 +79,33 @@ jobs:
             exit 1
           fi
 
+          echo "Confirming active deployment is our new deployment..."
+          ACTIVE_DEPLOYMENT_ID=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.service.active_deployment.id')
+
+          if [ "$ACTIVE_DEPLOYMENT_ID" != "${{ steps.redeploy.outputs.deployment_id }}" ]; then
+            echo "Active deployment not updated yet. Active: $ACTIVE_DEPLOYMENT_ID"
+            exit 1
+          fi
+
+          echo "Active deployment confirmed."
+
           echo "Checking service health status..."
-          ATTEMPTS=0
-          MAX_HEALTH_ATTEMPTS=10
+          SERVICE_STATUS=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.service.status')
 
-          while [ $ATTEMPTS -lt $MAX_HEALTH_ATTEMPTS ]; do
-            SERVICE_STATUS=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}" \
-              -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.service.status')
+          echo "Current service status: $SERVICE_STATUS"
 
-            echo "Current service status: $SERVICE_STATUS"
+          if [ "$SERVICE_STATUS" != "HEALTHY" ]; then
+            echo "Service is not healthy yet: $SERVICE_STATUS"
+            exit 1
+          fi
 
-            if [ "$SERVICE_STATUS" == "HEALTHY" ]; then
-              echo "Service is healthy. Proceeding..."
-              exit 0
-            elif [ "$SERVICE_STATUS" == "FAILED" ]; then
-              echo "Service entered FAILED state."
-              exit 1
-            fi
-
-            ATTEMPTS=$((ATTEMPTS+1))
-            sleep $SLEEP_TIME
-          done
-
-          echo "Service health check timed out."
-          exit 1
+          echo "Service is healthy. Proceeding..."
         env:
           KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
           KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}
+
 
 
       - name: Rollback if Deployment Failed
