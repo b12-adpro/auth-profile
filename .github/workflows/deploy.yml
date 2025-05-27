@@ -29,27 +29,67 @@ jobs:
           docker build -t ${{ secrets.DOCKER_FULL_IMAGE_NAME }} .
           docker push ${{ secrets.DOCKER_FULL_IMAGE_NAME }}
 
-      - name: Verify Deployment (Optional)
+      - name: Get Previous Deployment ID
+        id: get_previous
+        run: |
+          response=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments" \
+            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}")
+          prev_id=$(echo "$response" | jq -r '.deployments[] | select(.status=="SUCCESS") | .id' | head -n 1)
+          echo "Previous successful deployment: $prev_id"
+          echo "prev_deployment_id=$prev_id" >> $GITHUB_OUTPUT
+
+
+
+      - name: Verify Deployment
         # This step is mostly for verification. Koyeb will handle the actual redeploy.
         # You can add a small delay and then check service status or logs if you have Koyeb CLI configured.
         # For simplicity, we'll assume Koyeb's auto-deployment works.
         run: echo "Koyeb service configured for automatic deployment from Docker Hub. New image pushed."
         
-      - name: Trigger Koyeb Redeploy
+      - name: Trigger New Deployment
+        id: trigger_redeploy
         run: |
-          echo "Triggering Koyeb redeployment for service..."
-          # IMPORTANT:
-          # - Replace YOUR_KOYEB_SERVICE_ID with the actual Service ID from Koyeb.
-          #   This is NOT the Application ID. It's specific to the 'authprofile' service.
-          #   You can find it in the URL when viewing your service (e.g., app.koyeb.com/services/YOUR_KOYEB_SERVICE_ID/overview)
-          #   or via the Koyeb CLI.
-          # - Ensure KOYEB_API_KEY has 'Service' -> 'Update' permissions at least.
-          curl -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy" \
+          curl -s -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy" \
             -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" \
             -H "Content-Type: application/json" \
-            --data '{}' # Empty data for a simple redeploy
+            --data '{}' 
+          echo "Triggered redeploy"
 
-        env:
-          # Ensure these secrets are set in your GitHub repository settings
-          KOYEB_API_KEY: ${{ secrets.KOYEB_API_KEY }}
-          KOYEB_SERVICE_ID: ${{ secrets.KOYEB_SERVICE_ID }}
+      - name: Wait and Check Deployment Status
+        id: check_status
+        run: |
+          echo "Waiting for deployment to stabilize..."
+          sleep 30  # wait for new deployment to start
+          
+          latest_deployment_id=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments" \
+            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.deployments[0].id')
+
+          echo "New deployment ID: $latest_deployment_id"
+          echo "latest_deployment_id=$latest_deployment_id" >> $GITHUB_OUTPUT
+
+          for i in {1..10}; do
+            status=$(curl -s -X GET "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments/$latest_deployment_id" \
+              -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" | jq -r '.status')
+            
+            echo "Attempt $i - Deployment status: $status"
+            if [ "$status" = "SUCCESS" ]; then
+              echo "Deployment succeeded"
+              exit 0
+            elif [ "$status" = "FAILED" ]; then
+              echo "Deployment failed"
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "Deployment did not complete within expected time"
+          exit 1
+
+      - name: Rollback if Deployment Failed
+        if: failure()
+        run: |
+          echo "Rolling back to previous deployment: ${{ steps.get_previous.outputs.prev_deployment_id }}"
+          curl -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/deployments/${{ steps.get_previous.outputs.prev_deployment_id }}/redeploy" \
+            -H "Authorization: Bearer ${{ secrets.KOYEB_API_KEY }}" \
+            -H "Content-Type: application/json"
