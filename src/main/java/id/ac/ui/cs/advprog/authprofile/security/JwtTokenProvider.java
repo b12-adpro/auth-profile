@@ -9,10 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.stereotype.Component;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.security.Key;
-import java.security.SignatureException;
 import java.util.Date;
 
 @Component
@@ -60,17 +57,9 @@ public class JwtTokenProvider {
         try {
             Jwts.parser().setSigningKey(getSigningKey()).parseClaimsJws(authToken);
             return true;
-        } catch (ExpiredJwtException ex) {
-        logger.warn("JWT expired: {}", ex.getMessage());
-    } catch (UnsupportedJwtException ex) {
-        logger.warn("Unsupported JWT: {}", ex.getMessage());
-    } catch (MalformedJwtException ex) {
-        logger.warn("Malformed JWT: {}", ex.getMessage());
-    } catch (SignatureException ex) {
-        logger.warn("Invalid JWT signature: {}", ex.getMessage());
-    } catch (IllegalArgumentException ex) {
-        logger.warn("JWT claims string is empty: {}", ex.getMessage());
+        } catch (Exception ex) {
+            // Any exception
+        }
+        return false;
     }
-    return false;
-}
 }
